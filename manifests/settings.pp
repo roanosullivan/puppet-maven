@@ -80,12 +80,16 @@ define maven::settings( $home = undef, $user = 'root', $group = 'root',
     $home_real = $home
   }
 
-  file { "${home_real}/.m2":
-    ensure => directory,
-    owner  => $user,
-    group  => $group,
-    mode   => '0700',
-  } ->
+  # guard resource declaration to avoid conflict with other modules that might also manage maven repository
+  if ! defined(File["${home_real}/.m2"]) {
+    file { "${home_real}/.m2":
+      ensure => directory,
+      owner  => $user,
+      group  => $group,
+      mode   => '0700',
+      notify => File["${home_real}/.m2/settings.xml"],
+    }
+  }
   file { "${home_real}/.m2/settings.xml":
     owner   => $user,
     group   => $group,
